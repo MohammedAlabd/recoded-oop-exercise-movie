@@ -1,44 +1,36 @@
 class App {
   static run() {
-    // Call a method in APIService to fetch current movies
-    // Call renderMovies method
+    
     APIService.fetchMovies()
     .then(movies => HomePage.renderMovies(movies))
+    
 
-    // APIService.fetchMovie(534)
-    //   .then(movie => {
-    //     // add call to fetchActors, passing movie
-    //     MoviePage.renderMovieSection(movie)
-    //     APIService.fetchActors(movie)
-    //       .then(actors => {
-    //         console.log(actors);
-    //         MoviePage.renderActorsSection(actors)
-    //     })
-    //   })
+        
   }
 }
 
 class APIService {
 
-  static TMDB_BASE_URL = 'https://api.themoviedb.org/3'  //https://api.themoviedb.org/3/movie/${movieId}
-                                                      //https://api.themoviedb.org/3/movie/${movieId}/credits
-
-  // write a method to fetch current movies
-  // Use fetchActors as starter code
+  static TMDB_BASE_URL = 'https://api.themoviedb.org/3'  
   static fetchMovies() {
     // write code to fetch the movies 
     const url = APIService._constructUrl(`movie/now_playing`)
     return fetch(url)
       .then(res => res.json())
-      .then(json => json.results.map(movie => new Movie(movie))
-  )}
+      .then(json => {
+        // console.log(json)
+        return json.results.map(movie => new Movie(movie))
+      })
+  }
 
   static fetchMovie(movieId) {
     const url = APIService._constructUrl(`movie/${movieId}`)
     return fetch(url)
       .then(res => res.json())
-      .then(json => new Movie(json))
+      .then(json =>new Movie(json))
+        
   }
+
   static fetchActors(movie) {
     // write code to fetch the actors 
     const url = APIService._constructUrl(`movie/${movie.id}/credits`)
@@ -69,6 +61,8 @@ class HomePage {
       const movieImage = document.createElement("img");
       movieImage.src = `${movie.backdropUrl}`;
       const movieTitle = document.createElement("h3");
+     
+      movieGenres.textContent =`${movie.genres}`
       movieTitle.textContent = `${movie.title}`;
       movieImage.addEventListener("click", function() {
         Movies.run(movie)
@@ -88,9 +82,10 @@ class Movies {
       .then(movie => {
         // add call to fetchActors, passing movie
         MoviePage.renderMovieSection(movie)
+
         APIService.fetchActors(movie)
           .then(actors => {
-            console.log(actors);
+            // console.log(actors);
             MoviePage.renderActorsSection(actors)
         })
       })
@@ -117,6 +112,7 @@ class MovieSection {
         </div>
         <div class="col-md-8">
           <h2 id="movie-title">${movie.title}</h2>
+          <p id="genres">${movie.genres}</p>
           <p id="movie-release-date">${movie.releaseDate}</p>
           <p id="movie-runtime">${movie.runtime}</p>
           <h3>Overview:</h3>
@@ -150,10 +146,7 @@ class ActorsSection {
   static actorsList = document.getElementById('actors');
 
   static renderActors(actors) {
-    // add code to render Actors
-    // Questions: 
-    //    how do we handle selecting the first four?
-    //    how do we handle rendering the individual actors?
+   
     const actorsContainer = document.createElement('ul');
     actorsContainer.setAttribute('class', "list-unstyled")
     actorsContainer.setAttribute('id', 'actors');
@@ -190,6 +183,7 @@ class Actor {
   }
 }
 
+
 class ActorDetails extends Actor {
   constructor(json){
     super(json)
@@ -197,6 +191,7 @@ class ActorDetails extends Actor {
     this.biography = json.biography
   }
 }
+
 
 class Movie {
   static BACKDROP_BASE_URL = 'http://image.tmdb.org/t/p/w780'
@@ -206,14 +201,23 @@ class Movie {
     this.id = json.id
     this.title = json.title
     this.releaseDate = json.release_date
-    this.runtime = json.runtime + " minutes"
+    this.runtime = json.runtime + "minutes"
     this.overview = json.overview
     this.backdropPath = json.backdrop_path
+    
+    this.genres="";
+    for (const i in json.genres){
+      this.genres+=` ${json.genres[i].name}`
+    }
+    
+    
+    
   }
 
   get backdropUrl() {
     return this.backdropPath ? Movie.BACKDROP_BASE_URL + this.backdropPath : ""
   }
 }
+
 
 document.addEventListener("DOMContentLoaded", App.run);
