@@ -5,6 +5,8 @@ class App {
     APIService.fetchMovies()
     .then(movies => HomePage.renderMovies(movies))
 
+
+
     // APIService.fetchMovie(534)
     //   .then(movie => {
     //     // add call to fetchActors, passing movie
@@ -48,6 +50,17 @@ class APIService {
       .then(json => json.cast.slice(0,4).map(actor => new Actor(actor)))
   }
 
+  static fetchTrailer(movie_id) {
+    //    write code to fetch the trailers
+    const url = APIService._constructUrl(`movie/${movie_id}/videos`) 
+    return fetch(url)
+      .then(res => res.json())
+      .then(json => {
+        console.log(json)
+        return new Trailer(json.results[0])
+      })
+  }
+
   static  _constructUrl(path) {
     return `${this.TMDB_BASE_URL}/${path}?api_key=${atob('NTQyMDAzOTE4NzY5ZGY1MDA4M2ExM2M0MTViYmM2MDI=')}`
   }
@@ -81,12 +94,25 @@ class Movies {
       .then(movie => {
         // add call to fetchActors, passing movie
         MoviePage.renderMovieSection(movie)
+     
+
         APIService.fetchActors(movie)
           .then(actors => {
-            console.log(actors);
             MoviePage.renderActorsSection(actors)
         })
+
+        APIService.fetchTrailer(movie.id).then(video => {
+          TrailersSection.renderTrailers(video)
+        })
       })
+    }
+}
+
+class Trailer {
+  static url = `https://www.youtube.com/embed/` 
+    constructor(json) {
+      this.key = json.key
+      this.path = Trailer.url + this.key
     }
 }
 
@@ -98,6 +124,9 @@ class MoviePage {
   }
   static renderActorsSection(movie) {
     ActorsSection.renderActors(movie)
+  }
+  static renderTrailersSection(movie) {
+    TrailersSection.renderTrailers(movie)
   }
 }
 
@@ -149,6 +178,19 @@ class ActorsSection {
       </li>
     `)  
   }
+}
+
+class TrailersSection {
+
+  static trailersSector = document.createElement(`div`)
+  static renderTrailers(trailer) {
+    
+
+    TrailersSection.trailersSector.innerHTML = `<iframe width="560" height="315" src="${trailer.path}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
+    MoviePage.container.appendChild(TrailersSection.trailersSector)
+  }
+
+
 }
 
 class Actor {
